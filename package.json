@@ -1,0 +1,39 @@
+{
+  "name": "performance-framework",
+  "version": "1.1.0",
+  "description": "A performance test framework",
+  "scripts": {
+    "start": "node ./perf/start.js",
+    "compile": "babel src --out-dir perf --source-maps inline",
+    "clean": "rimraf perf coverage test-results .tmp reports"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.nike.com:assort-visual/performance-framework.git"
+  },
+  "author": "Assort/Visual Team",
+  "contributors": [
+    "James Brumond <james.brumond@nike.com>",
+    "Adam Olsen <adam.olsen@nike.com>"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "@gtm-av/av-performance-library": "^3.0.2",
+    "@gtm-av/js-iterators": "^1.1.0",
+    "@gtm-av/js-request-queue": "^2.0.1",
+    "@gtm-av/ui-test-base": "^6.3.6",
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-plugin-transform-async-to-module-method": "^6.24.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
+    "bluebird": "^3.5.0",
+    "csv-stringify": "^1.0.4",
+    "eslint": "^4.5.0",
+    "follow-redirects": "^1.9.0",
+    "mkdirp": "^0.5.1",
+    "node-mysql": "^0.4.2",
+    "winston": "^2.3.1",
+    "winston-cluster": "^0.1.0",
+    "ws": "^3.3.2"
+  }
+}

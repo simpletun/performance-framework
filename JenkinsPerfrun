@@ -1,0 +1,10 @@
+// library 'cop-pipeline-step'
+@Library(['foundation-jenkins']) _
+
+// Reference: https://github.nike.com/foundation/jenkins/blob/master/vars/jenkinsPerfRun.jenkins
+
+jenkinsPerfRun(awsRole: 'av',
+                jobNamespace: '/Assort Visual/Performance/performance-framework',
+                appName: 'performance-framework',
+                scenario: 'reference-example',
+                copyFromBranch: 'master')

@@ -1,0 +1,15 @@
+instrumentation:
+  excludes: [
+  'webpack.config.js',
+  'webpack.test.config.js',
+  'aws/**',
+  'spec/**',
+  'test/**',
+  'build/**',
+  'tmp/**',
+  'src/swagger*/**',
+  'node_modules/**',
+  'coverage/**',
+  'test-results/**'
+  ]
+  extensions: ['.js']

@@ -1,0 +1,74 @@
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	padding: 50px;
+}
+
+body > section {
+	padding-bottom: 100px;
+}
+
+header {
+	margin-bottom: 100px;
+}
+
+h1 {
+	margin-bottom: 0px;
+}
+
+h1, h2, h3, h4, h5, h6, dt {
+	color: #333;
+	font-family: TradeGothicBold;
+}
+
+p, li, dd {
+	color: #333;
+	font-family: TradeGothic;
+	line-height: 1.4;
+}
+
+li {
+	margin-bottom: 5px;
+}
+
+code {
+	color: #99cc00;
+	font-weight: normal;
+	font-family: Monaco, Consolas, 'Andale Mono', monospace;
+}
+
+a {
+	font-family: TradeGothic;
+	color: #fa5400;
+	text-decoration: none;
+}
+
+h2 a,
+h3 a {
+	color: inherit;
+	margin-left: 10px;
+	font-weight: normal;
+}
+
+aside {
+	padding: 25px 50px;
+}
+
+pre[class*="language-"] {
+	margin: 50px !important;
+}
+
+dl {
+	padding-left: 15px;
+}
+
+dt {
+	color: #666;
+}
+
+dd {
+	margin: 10px 20px;
+}

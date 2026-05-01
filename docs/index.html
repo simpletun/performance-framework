@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>performance-framework</title>
+	<link rel="stylesheet" href="./style.css" />
+	<link rel="stylesheet" href="./prism.css" />
+	<link rel="stylesheet" href="./trade-gothic.css" />
+</head>
+<body>
+	<header>
+		<h1>performance-framework</h1>
+		<a data-github="assort-visual/performance-framework"></a>
+		<p>
+			A highly generic and customizable performance testing framework in Node.js for testing HTTP APIs.
+		</p>
+	</header>
+
+	<section id="toc">
+		<h2>Documentation</h2>
+		<ul>
+			<li><a href="#setup">Setup</a></li>
+			<li><a href="#basic-concepts">Basic Concepts</a></li>
+			<li><a href="#workers">Workers</a></li>
+			<li><a href="#scenarios">Scenarios</a></li>
+			<li><a href="#worker-events">Worker Events</a></li>
+			<li><a href="#outputs">Outputs</a></li>
+			<li><a href="#run-mode-flags">Run Mode Flags</a></li>
+			<li>
+				<a href="#utilities">Utilities</a>
+				<ul>
+					<li><a href="#utilities-logger">Logger</a></li>
+					<li><a href="#utilities-random">Random</a></li>
+					<li><a href="#utilities-request">Request</a></li>
+					<li><a href="#utilities-sleep">Sleep</a></li>
+				</ul>
+			</li>
+		</ul>
+	</section>
+
+	<section id="setup">
+		<h2>Setup <a href="#setup">#</a></h2>
+		<p>
+			To use the framework, you should first create an orphaned branch off of the project you intend to test and pull the
+			framework into your branch.
+		</p>
+
+		<pre class="language-bash"><code>
+			# Open your service
+			$ cd &lt;your-service-project&gt;
+
+			# Create a new `performance` branch
+			$ git checkout --orphan performance
+
+			# Clear out all of the files so your branch is empty
+			$ git reset --hard
+
+			# Pull in the performance framework
+			$ git pull git@github.nike.com:assort-visual/performance-framework master
+
+			# Push up your new performance branch
+			$ git push origin performance
+		</code></pre>
+	</section>
+
+	<section id="basic-concepts">
+		<h2>Basic Concepts <a href="#basic-concepts">#</a></h2>
+		<p>
+			The performance framework functions by starting up a number of worker processes of various types as defined
+			by a configuration file to run several different types of tasks at once, while all reporting back results
+			to the master process. This configuration file with your definitions of workers is called a <em>scenario</em>,
+			and these files live inside the <code>scenarios</code> directory. You can have many scenarios in a project
+			for testing different endpoints or different situations.
+		</p>
+
+		<p>
+			Each worker that is run by the framework to perform a task is defined in the <code>src/workers</code> directory.
+			The workers receive the configuration given in the scenario file to tell it what to do and how. Workers communicate
+			with the master process by way of node's built-in clustering. This means that the worker can receive messages from
+			the master using <code>process.on('message')</code> and can send messages back using <code>process.send()</code>.
+			All of these messages have a <code>type</code> property on them so that the worker and master can communicate
+			different types of information (see <a href="#worker-events">Worker Events</a> for more info).
+		</p>
+
+		<p>
+			Once you have your workers created and a scenario defined, you will want to compile your performance suite and run
+			the scenario.
+		</p>
+
+		<pre class="language-bash"><code>
+			# Compile the performance suite
+			$ npm run compile
+
+			# Run your scenario
+			$ npm start -- &lt;scenario-name&gt;
+		</code></pre>
+
+		<p>
+			After your scenario has finished running, it will output a <code>results.&lt;timestamp&gt;.json</code> file with
+			a raw JSON dump of the scenario results.
+		</p>
+	</section>
+
+	<section id="workers">
+		<h2>Workers <a href="#workers">#</a></h2>
+		<p>
+			A worker starts functioning when the master sends a <code>start</code> message. This is the signal from the master that
+			the scenario is ready and the workers should begin doing whatever they are designed to do. All workers should listen for
+			this message before doing any actual work.
+		</p>
+
+		<pre class="language-javascript"><code>
+			process.on('message', (message) => {
+				switch (message.type) {
+					case 'start':
+						// TODO Start running the worker's tasks
+						break;
+				}
+			});
+		</code></pre>
+
+		<p>
+			To make your workers more flexible, you can pass configuration into them with the scenario. (We will get to how a scenario
+			is defined later in the <a href="#scenarios">Scenarios</a> section.) The configuration that the scenario provides to a worker
+			can be imported from the main worker module.
+		</p>
+
+		<pre class="language-javascript"><code>
+			import { config } from '../worker';
+		</code></pre>
+
+		<p>
+			As the worker is running and performs measurable tasks (like making requests against your server), it sends back results to
+			the master process by sending a <code>response</code> message. At a minimum, this message must contain the <code>success</code>,
+			<code>startTime</code>, and <code>endTime</code> properties.
+		</p>
+
+		<pre class="language-javascript"><code>
+			process.send({
+				type: 'response',
+
+				// Was the request successful
+				success: true,
+
+				// When did the request start
+				startTime: Date.now(),
+
+				// When did the request
+				endTime: Date.now()
+			});
+		</code></pre>
+
+		<p>
+			When your worker is done doing the job it is meant to do, it can send a <code>done</code> message up to the master. This will
+			kill the worker process. When all of the workers in a scenario report back as being done, the scenario is over and the master
+			shuts down.
+		</p>
+
+		<pre class="language-javascript"><code>
+			process.send({ type: 'done' });
+		</code></pre>
+
+		<p>
+			You will rarely (if ever) actually need to use <code>process.on('message')</code> or <code>process.send()</code> directly.
+			There are helper methods that make this a bit easier and cleaner.
+		</p>
+
+		<pre class="language-javascript"><code>
+			import { onMessage, sendMessage, shutdown } from '../worker';
+
+			// Listen for the start message
+			onMessage('start', () => {
+				// Send a response message
+				sendMessage('response', {
+					success: true,
+					startTime: Date.now(),
+					endTime: Date.now()
+				});
+
+				// Send a shutdown message
+				shutdown();
+
+				// Alternately, send a shut down message in 5 minutes
+				shutdown(1000 * 60 * 5);
+			});
+		</code></pre>
+	</section>
+
+	<section id="scenarios">
+		<h2>Scenarios <a href="#scenarios">#</a></h2>
+		<p>
+			The scenario file controls how many of what types of workers to run for a given test scenario. For example, let's assume
+			that you have three types of workers defined: one that makes search calls against your endpoint, one that loads a resource
+			by it's id, and one that runs a login attempt. Based on the distribution of load on your actual servers, you might want
+			to spin up different numbers of these different types of workers to run at the same time, representing the actual
+			distribution of requests in your application.
+		</p>
+
+		<pre class="language-javascript"><code>
+			// Define some config about the server we're hitting that all
+			// workers will share
+			const server = {
+				hostname: 'www.example.com',
+				ssl: false
+			};
+
+			// Define some config about the scenario we're running that all
+			// workers will share
+			const scenario = {
+				duration: 1000 * 60 * 5
+			};
+
+			// The part that really matters, export out the list of workers to run in our scenario
+			exports.workers = [
+				{
+					// The type of worker to create
+					workerType: 'search',
+
+					// The number of these workers to create
+					threads: 5,
+
+					// Any additional configuration to pass to the worker
+					server,
+					scenario
+				},
+
+				{
+					// The type of worker to create
+					workerType: 'id-lookup',
+
+					// The number of these workers to create
+					threads: 10,
+
+					// Any additional configuration to pass to the worker
+					server,
+					scenario
+				},
+
+				{
+					// The type of worker to create
+					workerType: 'login',
+
+					// The number of these workers to create
+					threads: 1,
+
+					// Any additional configuration to pass to the worker
+					server,
+					scenario
+				}
+			];
+		</code></pre>
+
+		<p>
+			The configuration object used to create a worker is available inside that worker.
+		</p>
+
+		<pre class="language-javascript"><code>
+			// Inside the worker, load the config
+			import { config } from '../worker';
+
+			console.log(config);
+			/*
+			{
+				workerType: 'search',
+				threads: 5,
+				server: {
+					hostname: 'www.example.com',
+					ssl: false
+				},
+				scenario: {
+					duration: 1000 * 60 * 5
+				}
+			}
+			*/
+		</code></pre>
+
+		<p>
+			You can also define a <code>workerGroup</code> property in your scenario to create groups of listeners workers
+			that consume similar data. This property can be either a string or an array of strings.
+		</p>
+
+		<pre class="language-javascript"><code>
+			exports.workers = [
+				{
+					workerType: 'get-by-id',
+					workerGroup: 'id-consumer',
+					threads: 5
+				},
+				{
+					workerType: 'update-by-id',
+					workerGroup: [ 'id-consumer', 'some-other-group' ],
+					threads: 5
+				}
+			];
+		</code></pre>
+
+		<p>
+			In the example above, both the <code>get-by-id</code> and the <code>update-by-id</code> worker sets are defined as belonging
+			to the <code>id-consumer</code> worker group. This means you can send data to both of these sets of workers from the same source.
+			For more about inter-process messaging, see the <a href="#worker-events">Worker Events</a> section.
+		</p>
+	</section>
+
+	<section id="worker-events">
+		<h2>Worker Events <a href="#worker-events">#</a></h2>
+		<p>
+			Your worker processes are able to send messages to each other by way of two message types that can be sent from your workers.
+			These are <code>broadcast</code> and <code>roundrobin</code>. A <code>broadcast</code> message is sent to all matching workers,
+			where as a <code>roundrobin</code> message is distributed out among the matching workers. For example, look at the following
+			scenario definition:
+		</p>
+
+		<pre class="language-javascript"><code>
+			// Run the scenario for 5 minutes
+			const scenarioDuration = 1000 * 60 * 5;
+
+			exports.workers = [
+				{
+					workerType: 'get-by-id',
+					workerGroup: 'id-consumer',
+					threads: 5,
+					duration
+				},
+				{
+					workerType: 'update-by-id',
+					workerGroup: 'id-consumer',
+					threads: 5,
+					duration
+				},
+				{
+					workerType: 'id-reader',
+					threads: 1,
+					duration,
+					mysql: {
+						// DB config
+					}
+				}
+			];
+		</code></pre>
+
+		<p>
+			Here, we have defined 3 types of workers. For your first two (<code>get-by-id</code> and <code>update-by-id</code>), you
+			will need to have a list of "valid" ids to get/update against that actually exist (say, in the application database).
+			Those ids have to be read from somewhere so the worker can act on them. So we create another worker called
+			<code>id-reader</code>. Let's look at a simple example for that.
+		</p>
+
+		<pre class="language-javascript"><code>
+			import { config, shutdown, onMessage, sendMessage } from '../worker';
+			import { getConnection } from 'mysql';
+			import { sleep } from '../utils/sleep';
+			import { logger } from '../utils/logger';
+
+			let lastIndex = 0;
+			const chunkSize = 100;
+
+			onMessage('start', async () => {
+				// Run for the configured duration and then shut down
+				shutdown(config.duration);
+
+				while (true) {
+					// Distribute a batch of ids to the workers that need them
+					await getIds();
+
+					// Sleep for a while before loading more ids
+					await sleep(1000);
+				}
+			});
+
+			const getIds = () => {
+				return new Promise((resolve) => {
+					getConnection(config.mysql, (connection) => {
+						connection.query(`select id from some_table limit ${chunkSize} offset ${lastIndex} order by id asc`, (err, ids) => {
+							connection.release();
+
+							// If there was an error, log it and continue running
+							if (err) {
+								logger.warn('Failed to load ids from the database', err);
+								return resolve();
+							}
+
+							// Map the loaded ids into messages to be distributed
+							const idMessages = ids.map((id) => {
+								return { type: 'record-id', id };
+							});
+
+							// Distribute the loaded ids among the "id-consumer" worker group
+							sendMessage('roundrobin', {
+								workerGroup: 'id-consumer',
+								messages: idMessages
+							});
+
+							resolve();
+						});
+
+						lastIndex += chunkSize;
+					});
+				});
+			};
+		</code></pre>
+
+		<p>
+			Next, let's take a look at what one of these id consumers might look like. It will receive the <code>record-id</code> events
+			distributed by the <code>id-reader</code> as a message event.
+		</p>
+
+		<pre class="language-javascript"><code>
+			import { sleep } from '../utils/sleep';
+			import { logger } from '../utils/logger';
+			import { request } from '../utils/request';
+			import { config, onMessage, sendMessage, shutdown } from '../worker';
+
+			const recordIds = [ ];
+
+			onMessage('start', async () => {
+				// Run for the configured duration and shutdown
+				shutdown(config.duration);
+
+				while (true) {
+					if (recordIds.length) {
+						// If we have ids in the queue, take the first id off the queue and run the request
+						await runGetRequest(recordIds.shift());
+						await sleep(100);
+					}
+
+					else {
+						logger.info('Waiting for more record ids from "id-reader"');
+
+						// Sleep a little longer before trying again if we run out of ids
+						await sleep(500);
+					}
+				}
+			});
+
+			// When the "id-reader" sends us an id, add it to our queue of ids to use
+			onMessage('record-id', ({ id }) => {
+				recordIds.push(id);
+			});
+
+			const runGetRequest = async (recordId) => {
+				const { startTime, endTime, success } = await request({
+					hostname: 'www.example.com',
+					path: `/some-endpoint/${recordId}`,
+					method: 'get'
+				});
+
+				sendMessage('response', { startTime, endTime, success });
+			}
+		</code></pre>
+	</section>
+
+	<section id="outputs">
+		<h2>Outputs <a href="#outputs">#</a></h2>
+		<p>
+			When running a performance scenario, the framework streams details results to a file in the <code>perf/results</code>
+			directory. When the scenario first starts up, it creates a file <code>perf/results/&lt;timestamp&gt;.&lt;type&gt;</code>,
+			where <code>timestamp</code> is a unix timestamp for the current time, and <code>type</code> is the type of output file.
+			(See <a href="#run-mode-flags">Run Mode Flags</a> for info about how to control the output type.)
+		</p>
+	</section>
+
+	<section id="run-mode-flags">
+		<h2>Run Mode Flags <a href="#run-mode-flags">#</a></h2>
+		<p>
+			When starting a scenario, you can pass in a list of run mode flags to control how the scenario runs.
+		</p>
+
+		<pre class="language-bash"><code>
+			$ npm start -- scenario flag1,flag2,flag3
+		</code></pre>
+
+		<p>
+			The following run mode flags are currently supported.
+		</p>
+
+		<dl>
+			<dt>single-thread</dt>
+			<dd>
+				Causes all worker definitions to run only a single thread, overriding the config in the scenario file. This is useful
+				when debugging a scenario, to help reduce the amount of work occuring at a time and reduce the amount of extra noise.
+			</dd>
+
+			<dt>log:&lt;log-level&gt;</dt>
+			<dd>
+				Sets the logging level to <code>log-level</code>. For example, a <code>log:debug</code> run mode flag will set the log
+				level to debug for the run.
+			</dd>
+
+			<dt>output:&lt;output-type&gt;</dt>
+			<dd>
+				Sets the output format to <code>output-type</code>. The following output types are supported: <code>json</code>,
+				<code>csv</code>.
+			</dd>
+
+			<dt>heap:&lt;heap-size&gt;</dt>
+			<dd>
+				Sets the max heap size for worker processes to <code>heap-size</code> MB. If not defined, the nodejs default
+				max heap size will be used.
+			</dd>
+		</dl>
+	</section>
+
+	<section id="utilities">
+		<h2>Utilities <a href="#utilities">#</a></h2>
+		<p>
+			There are several pre-built utilities available to your workers to help you in creating good scenarios. This section
+			is just a basic overview of what is available to you out of the box. Keep in mind that you can also always load in
+			any npm package that you need to to help.
+		</p>
+
+		<section id="utilities-logger">
+			<h3>Logger <a href="#utilities-logger">#</a></h3>
+			<p>
+				The logger, as it's name implies, is used for logging out messages from your workers. It uses
+				<a href="https://github.com/winstonjs/winston">winston</a> to handle the actual logging.
+			</p>
+
+			<pre class="language-javascript"><code>
+				import { logger } from '../utils/logger';
+
+				// Send out a basic log message
+				logger.info('Log this to the console', { extra: 'data' });
+
+				// Other logging levels have their own methods
+				logger.error('Oh no!');
+				logger.warn('Be careful, you might have broken things');
+				logger.info('You did a thing!');
+				logger.verbose('You did a less important thing');
+				logger.debug('This might be helpful to know if you are looking for a bug');
+				logger.silly('So... much... logging.... D:');
+			</code></pre>
+
+			<p>
+				By default, anything at a lower logging level then <code>info</code> is not output. If you need more detailed logging
+				information, you can increase the logging level in the <code>src/utils/logger.js</code> file.
+			</p>
+		</section>
+
+		<section id="utilities-random">
+			<h3>Random <a href="#utilities-random">#</a></h3>
+			<p>
+				The random utility contains a number of functions for making random choices.
+			</p>
+
+			<pre class="language-javascript"><code>
+				import { randomInt, randomItem, randomItems } from '../utils/random';
+
+				// Generates a random integer between 1 (inclusive) and 10 (exclusive)
+				const number = randomInt(1, 10);
+
+				const array = [ 'a', 'b', 'c', 'd', 'e', 'f' ];
+
+				// Picks a random item from the array, like "b"
+				const item = randomItem(array);
+
+				// Picks a random number of random items from the array.
+				// For example, this can return [ "a", "d" ] or [ "a", "b", "c", "d", "e", "f" ] or [ ]
+				const items = randomItems(array);
+
+				// You can also chose a min/max number of items to get, eg.
+				// get a random number (but at least 1) of random items
+				const otherItems = randomItems(array, 1);
+
+				// get a random number (at least 1, but no more than 3) of random items
+				const otherOtherItems = randomItems(array, 1, 3);
+			</code></pre>
+		</section>
+
+		<section id="utilities-request">
+			<h3>Request <a href="#utilities-request">#</a></h3>
+			<p>
+				The request utility is arguably the most important. It makes an outgoing HTTP request and records the
+				<code>startTime</code>, <code>endTime</code>, and <code>success</code> values to be passed back up to the master. It takes
+				a number of different config options to control the request made, but most of them are optional.
+			</p>
+
+			<pre class="language-javascript"><code>
+				import { request } from '../utils/request';
+
+				const { startTime, endTime, success } = request({
+					hostname: 'www.example.com',
+					method: 'get',
+					path: '/',
+
+					// These are all optional
+					port: 80,
+					ssl: false,
+					payload: null,
+					headers: { 'content-type': 'text/plain' }
+				});
+			</code></pre>
+
+			<p>
+				It also passes back two more values (<code>status</code> and <code>body</code>) in case you need to do more complex
+				processing of the result, but these values are not needed to record performance.
+			</p>
+		</section>
+
+		<section id="utilities-sleep">
+			<h3>Sleep <a href="#utilities-sleep">#</a></h3>
+			<p>
+				The sleep utility is used for controlling timing and adding in delays into your workers. It returns a promise that
+				will resolve after a given amount of time.
+			</p>
+
+			<pre class="language-javascript"><code>
+				import { sleep } from '../utils/sleep';
+
+				const sleepTest = async () => {
+					console.log(Date.now());
+
+					// Sleep for 1 second (1000 milliseconds)
+					await sleep(1000);
+
+					console.log(Date.now());
+				};
+			</code></pre>
+		</section>
+	</section>
+
+	<script src="./prism.js"></script>
+	<script>
+		const mdnLinks = [...document.querySelectorAll('a[data-mdn]')];
+
+		mdnLinks.forEach((link) => {
+			const page = link.getAttribute('data-mdn');
+
+			link.href = `https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/${page}`;
+			link.target = '_blank';
+		});
+
+		const githubLinks = [...document.querySelectorAll('a[data-github]')];
+
+		githubLinks.forEach((link) => {
+			const page = link.getAttribute('data-github');
+
+			link.href = `https://github.nike.com/${page}`;
+			link.target = '_blank';
+
+			if (! link.innerHTML) {
+				link.innerHTML = `https://github.nike.com/${page}`;
+			}
+		});
+	</script>
+</body>
+</html>

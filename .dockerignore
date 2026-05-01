@@ -1,0 +1,53 @@
+# CI/CD
+Jenkins*
+circle*
+.circle*
+.vscode/
+.git*
+
+#Test folders
+spec/
+test/
+mybatis/
+
+### Node.js ###
+# Dependency directories
+node_modules
+build
+# Logs
+logs
+*.log
+*.log.[0-9]
+log*
+results
+
+# Coverage directory
+lib-cov
+coverage
+.nyc_output
+.istanbul.yml
+
+# Optional NPM cache directory
+.npm
+
+# Package ignore file
+.npmignore
+
+### Project ###
+# Metafiles
+.env.example
+.editorconfig
+.dockerignore
+Dockerfile
+docker-compose.yml
+.eslint*
+
+# performance framework specific
+src
+docs
+readme*
+perf/results
+secrets
+
+# Terraform
+tf/
