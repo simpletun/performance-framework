@@ -4,7 +4,7 @@ This particular worker also shows a pattern for using subthreads to make more ef
 The FileReadMessenger class makes use of inter-process communication to send a message requesting a line from the
 file-data-provider worker.
 */
-import { logger, config, shutdown, onMessage, FileReadMessenger, randomNumberFrom, sleep } from '@gtm-av/av-performance-library';
+import { logger, config, shutdown, onMessage, FileReadMessenger, randomNumberFrom, sleep } from 'cluster-load-runner';
 
 const fileReadMessenger = new FileReadMessenger({ workerGroup: 'fileReader' });
 const otherFileReadMessenger = new FileReadMessenger({ workerGroup: 'otherFileReader' });

@@ -1,5 +1,5 @@
 
-import { sleep, makeRequest, getAuthToken, logger, randomNumberFrom, FileReadMessenger, config, shutdown, onMessage } from '@gtm-av/av-performance-library';
+import { sleep, makeRequest, getAuthToken, logger, randomNumberFrom, FileReadMessenger, config, shutdown, onMessage } from 'cluster-load-runner';
 
 const fileReadMessenger = new FileReadMessenger({ workerGroup: 'referenceReader' });
 

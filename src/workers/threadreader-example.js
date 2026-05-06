@@ -1,5 +1,5 @@
 
-import { logger, shutdown, onMessage } from '@gtm-av/av-performance-library';
+import { logger, shutdown, onMessage } from 'cluster-load-runner';
 
 onMessage('stop', () => {
 	shutdown();

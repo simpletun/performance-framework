@@ -1,4 +1,4 @@
-const rampup = require('@gtm-av/av-performance-library/build/utils/rampup');
+const { evenRampUp } = require('cluster-load-runner');
 
 const autoPass = process.env.autoPass;
 const oktaClientSecret = process.env.oktaClientSecret;
@@ -55,7 +55,7 @@ exports.providers = [
 exports.workers = [
 	{
 		workerType: 'reference-example',
-		threads: rampup.evenRampUp(threadCounts.worker1.threads, threadCounts.worker1.rampup * minute),
+		threads: evenRampUp(threadCounts.worker1.threads, threadCounts.worker1.rampup * minute),
 		subThreads: threadCounts.worker1.subthreads,
 		thinkFrom: threadCounts.worker1.thinkfrom,
 		thinkTo: threadCounts.worker1.thinkto,
@@ -65,4 +65,3 @@ exports.workers = [
 		randomLine: true
 	}
 ];
-

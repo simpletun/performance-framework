@@ -1,5 +1,5 @@
 
-import { sleep, logger, randomNumberFrom, config, shutdown, onMessage, sendMessage } from '@gtm-av/av-performance-library';
+import { sleep, logger, randomNumberFrom, config, shutdown, onMessage, sendMessage } from 'cluster-load-runner';
 
 onMessage('stop', () => {
 	shutdown();

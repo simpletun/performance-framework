@@ -1,4 +1,4 @@
-const rampup = require('@gtm-av/av-performance-library/build/utils/rampup');
+const { evenRampUp } = require('cluster-load-runner');
 
 const second = 1000;
 const minute = 60 * second;
@@ -13,7 +13,7 @@ exports.providers = [];
 exports.workers = [
 	{
 		workerType: 'threadwriter-example',
-		threads: rampup.evenRampUp(2, 1 * minute),
+		threads: evenRampUp(2, 1 * minute),
 		subThreads: 1,
 		thinkFrom: 5000,
 		thinkTo: 10000,
@@ -28,4 +28,3 @@ exports.workers = [
 		scenario
 	}
 ];
-

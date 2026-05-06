@@ -5,7 +5,7 @@ more efficient.
 The MysqlQueryMessenger class makes use of inter-process communication to send query requests to
 a mysql-data-provider worker, which uses a db host configured in the scenario.
 */
-import { sleep, logger, randomItem, randomInt, config, shutdown, onMessage, MysqlQueryMessenger } from '@gtm-av/av-performance-library';
+import { sleep, logger, randomItem, randomInt, config, shutdown, onMessage, MysqlQueryMessenger } from 'cluster-load-runner';
 
 const seasonCodes = [ 'SU20', 'FA20', 'HO20', 'SP21', 'SU21' ];
 const queryMessenger = new MysqlQueryMessenger({ workerGroup: 'queryProvider' });

@@ -18,10 +18,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "@gtm-av/av-performance-library": "^3.0.2",
-    "@gtm-av/js-iterators": "^1.1.0",
-    "@gtm-av/js-request-queue": "^2.0.1",
-    "@gtm-av/ui-test-base": "^6.3.6",
+    "cluster-load-runner": "^3.0.2",
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
     "babel-plugin-transform-async-to-module-method": "^6.24.1",
