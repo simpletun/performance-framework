@@ -1,17 +1,3 @@
-divisions
-geographies
-countries
-channelSegmentations
-categoryCoreFocuses
-retailConcepts
-genders
-ages
-merchandisingClassifications
-seasons
-bannerAccounts
-colors
-collections
-tags
-clusters
-silhouetteTypes
-sportLevels
+GET, items
+GET, status
+POST, echo

@@ -1,23 +1,21 @@
 const second = 1000;
 
-const preprodPass = process.env.dbPass;
+const dbPass = process.env.dbPass;
 
 const dbConnection = {
 	connectionLimit: 10,
-	host: 'av-aurora-master-qa.nikecloud.net',
+	host: 'db.example.com',
 	port: '3306',
-	user: 'preprodrw',
-	password: preprodPass,
-	database: 'av_testdata'
+	user: 'db_user',
+	password: dbPass,
+	database: 'example_db'
 };
 
 const scenario = {
 	duration: 10 * second
 };
 
-exports.scenario = scenario;
-
-exports.providers = [
+const providers = [
 	{
 		workerType: 'mysql-data-provider',
 		workerGroup: 'queryProvider',
@@ -27,7 +25,7 @@ exports.providers = [
 	}
 ];
 
-exports.workers = [
+const workers = [
 	{
 		workerType: 'mysql-example',
 		threads: 1,
@@ -35,3 +33,5 @@ exports.workers = [
 		scenario
 	}
 ];
+
+export default { scenario, providers, workers };

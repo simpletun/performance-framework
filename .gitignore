@@ -13,19 +13,18 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 test-results
+
+# Perf test results
+src/results
 .sonar
 checkstyle.xml
 reports
-
-# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
 
 # node-waf configuration
 .lock-wscript
 
 build
 .tmp
-perf
 secrets
 
 # Dependency directory
@@ -51,3 +50,5 @@ appVersion.txt
 */.terraform
 terraform.*
 .terraform*
+
+.env

@@ -26,7 +26,7 @@ Next, you will want to pull in the performance framework
 
 ```bash
 # Pull in the performance framework
-$ git pull git@github.com:nike-assort-visual/performance-framework master
+$ git pull git@github.com:simpletun/performance-framework master
 
 # Push up your new performance branch
 $ git push origin performance

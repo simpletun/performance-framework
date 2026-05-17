@@ -1,32 +1,22 @@
-const { evenRampUp } = require('cluster-load-runner');
-
-const autoPass = process.env.autoPass;
-const oktaClientSecret = process.env.oktaClientSecret;
+import { evenRampUp } from 'cluster-load-runner';
 
 const second = 1000;
 const minute = 60 * second;
-const env = 'qa';
 
-const scenarioString = process.env.scenario || '{"duration":4,"hostname":"av-qa.nike-e2e.com","worker1":{"threads":5,"rampup":1,"subthreads":3}}'
+const scenarioString = process.env.scenario || '{"duration":4,"hostname":"localhost","worker1":{"threads":5,"rampup":1,"subthreads":3}}'
 const scenarioObj = JSON.parse(scenarioString)
 
 const scenario = {
-	duration: (scenarioObj.duration * minute ) || 3 * minute
+	duration: (scenarioObj.duration * minute) || 3 * minute
 };
 
 const server = {
-	ssl: true,
-	hostname: scenarioObj.hostname || `av-${env}.nike-e2e.com`,
+	ssl: false,
+	hostname: scenarioObj.hostname || 'localhost',
+	port: scenarioObj.port || 3000,
 	headers: {
 		'Content-Type': 'application/json'
 	}
-};
-
-const okta = {
-	clientSecret: oktaClientSecret,
-	clientId: 'nike.gtms.assort-test',
-	user: 'A.ASSTPLANQA',
-	password: autoPass
 };
 
 const threadCounts = {
@@ -39,12 +29,10 @@ const threadCounts = {
 	}
 }
 
-exports.scenario = scenario;
-
-exports.providers = [
+const providers = [
 	{
 		workerType: 'file-data-provider',
-		workerGroup: 'referenceReader',
+		workerGroup: 'perfTestReader',
 		threads: 1,
 		fileName: 'endpoints.csv',
 		chunkSize: Infinity,
@@ -52,16 +40,17 @@ exports.providers = [
 	}
 ];
 
-exports.workers = [
+const workers = [
 	{
-		workerType: 'reference-example',
+		workerType: 'perf-test-example',
 		threads: evenRampUp(threadCounts.worker1.threads, threadCounts.worker1.rampup * minute),
 		subThreads: threadCounts.worker1.subthreads,
 		thinkFrom: threadCounts.worker1.thinkfrom,
 		thinkTo: threadCounts.worker1.thinkto,
 		server,
 		scenario,
-		okta,
 		randomLine: true
 	}
 ];
+
+export default { scenario, providers, workers };

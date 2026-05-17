@@ -1,9 +1,9 @@
-import { isMaster } from 'cluster';
+import cluster from 'cluster';
 
-if (isMaster) {
-	require('cluster-load-runner/master');
+if (cluster.isPrimary) {
+	await import('cluster-load-runner/master');
 }
 
 else {
-	require('cluster-load-runner/worker');
+	await import('cluster-load-runner/worker');
 }

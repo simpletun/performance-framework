@@ -1,6 +1,0 @@
-// library 'cop-pipeline-step'
-@Library(['foundation-jenkins']) _
-
-// Reference: https://github.nike.com/foundation/jenkins/blob/master/vars/jenkinsPerfBuild.groovy
-
-jenkinsPerfBuild(dockerImageRoot: 'create/av/performance-framework')

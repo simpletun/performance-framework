@@ -2,35 +2,29 @@
   "name": "performance-framework",
   "version": "1.1.0",
   "description": "A performance test framework",
+  "type": "module",
   "scripts": {
-    "start": "node ./perf/start.js",
-    "compile": "babel src --out-dir perf --source-maps inline",
-    "clean": "rimraf perf coverage test-results .tmp reports"
+    "start": "node $([ -f .env ] && echo '--env-file=.env') ./src/start.js",
+    "clean": "rimraf coverage test-results .tmp reports"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.nike.com:assort-visual/performance-framework.git"
+    "url": "git@github.com:simpletun/performance-framework.git"
   },
-  "author": "Assort/Visual Team",
+  "author": "",
   "contributors": [
-    "James Brumond <james.brumond@nike.com>",
-    "Adam Olsen <adam.olsen@nike.com>"
+    "James Brumond (https://github.com/kbjr)",
+    "Adam Olsen (https://github.com/simpletun)"
   ],
   "license": "ISC",
   "dependencies": {
-    "cluster-load-runner": "^3.0.2",
-    "babel-cli": "^6.24.1",
-    "babel-core": "^6.24.1",
-    "babel-plugin-transform-async-to-module-method": "^6.24.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
-    "bluebird": "^3.5.0",
+    "cluster-load-runner": "github:simpletun/performance-library",
     "csv-stringify": "^1.0.4",
-    "eslint": "^4.5.0",
+    "eslint": "^10.4.0",
     "follow-redirects": "^1.9.0",
     "mkdirp": "^0.5.1",
     "node-mysql": "^0.4.2",
     "winston": "^2.3.1",
-    "winston-cluster": "^0.1.0",
-    "ws": "^3.3.2"
+    "winston-cluster": "^0.5.4"
   }
 }

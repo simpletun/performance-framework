@@ -4,9 +4,7 @@ const scenario = {
 	duration: 10 * second
 };
 
-exports.scenario = scenario;
-
-exports.providers = [
+const providers = [
 	{
 		workerType: 'file-data-provider',
 		workerGroup: 'fileReader',
@@ -28,7 +26,7 @@ exports.providers = [
 	}
 ];
 
-exports.workers = [
+const workers = [
 	{
 		workerType: 'file-example',
 		threads: 1,
@@ -39,3 +37,5 @@ exports.workers = [
 		thinkTo: 3000
 	}
 ];
+
+export default { scenario, providers, workers };

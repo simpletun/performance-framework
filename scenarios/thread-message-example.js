@@ -1,4 +1,4 @@
-const { evenRampUp } = require('cluster-load-runner');
+import { evenRampUp } from 'cluster-load-runner';
 
 const second = 1000;
 const minute = 60 * second;
@@ -6,11 +6,9 @@ const scenario = {
 	duration: 2 * minute
 };
 
-exports.scenario = scenario;
+const providers = [];
 
-exports.providers = [];
-
-exports.workers = [
+const workers = [
 	{
 		workerType: 'threadwriter-example',
 		threads: evenRampUp(2, 1 * minute),
@@ -28,3 +26,5 @@ exports.workers = [
 		scenario
 	}
 ];
+
+export default { scenario, providers, workers };
