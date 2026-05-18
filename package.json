@@ -18,7 +18,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "cluster-load-runner": "github:simpletun/performance-library",
+    "cluster-load-runner": "^1.0.1",
     "csv-stringify": "^1.0.4",
     "eslint": "^10.4.0",
     "follow-redirects": "^1.9.0",
