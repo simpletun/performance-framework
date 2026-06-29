@@ -18,7 +18,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "cluster-load-runner": "^1.0.1",
+    "cluster-load-runner": "^1.2.0",
     "csv-stringify": "^1.0.4",
     "eslint": "^10.4.0",
     "follow-redirects": "^1.9.0",

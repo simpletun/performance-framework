@@ -1,4 +1,4 @@
-import { sleep, makeRequest, logger, randomNumberFrom, FileReadMessenger, config, shutdown, onMessage } from 'cluster-load-runner';
+import { gaussianThinkTime, makeRequest, logger, FileReadMessenger, config, shutdown, onMessage } from 'cluster-load-runner';
 
 const fileReadMessenger = new FileReadMessenger({ workerGroup: 'perfTestReader' });
 
@@ -23,7 +23,7 @@ const startSubThread = async () => {
 			logger.error(`Got an error --> ${error.stack}`);
 		}
 
-		await sleep(randomNumberFrom(config.thinkFrom, config.thinkTo));
+		await gaussianThinkTime(config.thinkFrom, config.thinkTo);
 	}
 };
 
